@@ -12,6 +12,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.cross_validation import StratifiedKFold, cross_val_score
 from sklearn.naive_bayes import MultinomialNB
+import re
 
 def loadData(train=True, verbose=False):
     """
@@ -49,6 +50,17 @@ def loadTrainSet(shuffle=False, dataFrame=False, verbose=False):
         return pd.DataFrame({'data':data, 'label':label})
         
     return data, label
+
+def myFeatures(string):
+    return [
+    len(string),
+    string.count('.'),
+    string.count('!'),
+    string.count('?'),
+    len(re.findall(r'\W',string)),
+    len(re.findall(r'10', string)),
+    len(re.findall(r'[0-9]', string))
+    ]
 
 if __name__=='__main__':
     print("Loading training set")
