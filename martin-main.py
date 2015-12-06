@@ -64,8 +64,16 @@ def myFeatures(string):
     len(re.findall(r'[0-9]', string))
     ]
 
-def preprocess(string):
-    pass
+def preprocess(data):
+    data = [ re.sub(r"<.*>"," ",text) for text in data ]
+    punctuation = set(string.punctuation)
+    stemmer = PorterStemmer()
+    #data2 = [ [ stemmer.stem(m.lower() for m in re.sub(text,regex_punctuation," ").split() if m.lower() not in punctuation ]  for text in data2]
+    data = [ " ".join([ stemmer.stem(m) for m in nltk.word_tokenize(text.decode("utf-8")) if m not in punctuation ]) for text in data]   
+    # re.sub(r"<.*>","",review2)
+    #TODO features a la mano !!
+    #TODO : Count break ... 
+    return data
     
 def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
     """
@@ -82,6 +90,8 @@ def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
 print("Loading training set")
 data, y = loadTrainSet()
 cv = StratifiedKFold(y, n_folds=10, shuffle=True, random_state=41)
+
+#TO UNCOMMENT : data = preprocess(data)
 
 #TODO features a la main !!
 print("Tfidf ...")
