@@ -1,73 +1,59 @@
-from pyspark import SparkContext
-import loadFiles as lf
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 30 16:13:54 2015
+
+@author: martin
+"""
+
+import pandas as pd 
 import numpy as np
-from random import randint
-from  pyspark.mllib.classification import NaiveBayes
-from functools import partial
-from pyspark.mllib.linalg import SparseVector
-from pyspark.mllib.regression import LabeledPoint
-sc = SparkContext(appName="Simple App")
+import os
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.cross_validation import StratifiedKFold, cross_val_score
+from sklearn.naive_bayes import MultinomialNB
+import re
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, classification_report, auc
+from nltk.stem.porter import PorterStemmer
+import nltk
+import string
+from fonctions import *
 
 
-def createBinaryLabeledPoint(doc_class,dictionary):
-	words=doc_class[0].strip().split(' ')
-	#create a binary vector for the document with all the words that appear (0:does not appear,1:appears)
-	#we can set in a dictionary only the indexes of the words that appear
-	#and we can use that to build a SparseVector
-	vector_dict={}
-	for w in words:
-		vector_dict[dictionary[w]]=1
-	return LabeledPoint(doc_class[1], SparseVector(len(dictionary),vector_dict))
-def Predict(name_text,dictionary,model):
-	words=name_text[1].strip().split(' ')
-	vector_dict={}
-	for w in words:
-		if(w in dictionary):
-			vector_dict[dictionary[w]]=1
-	return (name_text[0], model.predict(SparseVector(len(dictionary),vector_dict)))
-data,Y=lf.loadLabeled("./data/train")
-print len(data)
-dataRDD=sc.parallelize(data,numSlices=16)
-#map data to a binary matrix
-#1. get the dictionary of the data
-#The dictionary of each document is a list of UNIQUE(set) words 
-lists=dataRDD.map(lambda x:list(set(x.strip().split(' ')))).collect()
-all=[]
-#combine all dictionaries together (fastest solution for Python)
-for l in lists:
-	all.extend(l)
-dict=set(all)
-print len(dict)
-#it is faster to know the position of the word if we put it as values in a dictionary
-dictionary={}
-for i,word in enumerate(dict):
-	dictionary[word]=i
-#we need the dictionary to be available AS A WHOLE throughout the cluster
-dict_broad=sc.broadcast(dictionary)
-#build labelled Points from data
-data_class=zip(data,Y)#if a=[1,2,3] & b=['a','b','c'] then zip(a,b)=[(1,'a'),(2, 'b'), (3, 'c')]
-dcRDD=sc.parallelize(data_class,numSlices=16)
-#get the labelled points
-labeledRDD=dcRDD.map(partial(createBinaryLabeledPoint,dictionary=dict_broad.value))
-#Train NaiveBayes
-model=NaiveBayes.train(labeledRDD)
-#broadcast the model
-mb=sc.broadcast(model)
+print("Loading training set")
+data, y = loadTrainSet()
+cv = StratifiedKFold(y, n_folds=10, shuffle=True, random_state=41)
 
-test,names=lf.loadUknown('./data/test')
-name_text=zip(names,test)
-#for each doc :(name,text):
-#apply the model on the vector representation of the text
-#return the name and the class
-predictions=sc.parallelize(name_text).map(partial(Predict,dictionary=dict_broad.value,model=mb.value)).collect()
+#TO UNCOMMENT : data = preprocess(data)
 
-output=file('./classifications.txt','w')
-for x in predictions:
-	output.write('%s\t%d\n'%x)
-output.close()
+#TODO features a la main !!
+print("Tfidf ...")
+tfidf = TfidfVectorizer(ngram_range=(1,2))
+X = tfidf.fit_transform(data)
+inv_voc = {v:k for k,v in tfidf.vocabulary_.items()}
 
+print("k Best...") # Selecting the Kbest to see which word come out first. 
+kBest = SelectKBest(chi2, k=25)
+kBest.fit(X,y)
+print(' '.join([inv_voc[index] for index in kBest.get_support(indices=True)]))
 
+## Printing scores and roc curve :
+model = MultinomialNB(alpha=0.5)
+scores_accuracy = cross_val_score(model, X,y,cv=cv, n_jobs=-1)
+scores_roc_auc = cross_val_score(model, X,y,cv=cv, n_jobs=-1, scoring="roc_auc")
+print("Accuracy :\n", round(np.mean(scores_accuracy), 4), "+/-", round(2*np.std(scores_accuracy),4))
+print("ROC AUC : \n", round(np.mean(scores_roc_auc), 4), "+/-", round(2*np.std(scores_roc_auc),4))
 
+#creating the cross_val predict and predict_proba :
+y_pred_proba = np.zeros((y.shape[0],2))
+for train_idx, test_idx in cv:
+    model.fit(X[train_idx], y[train_idx])
+    y_pred_proba[test_idx] = model.predict_proba(X[test_idx])
+y_pred = np.argmax(y_pred_proba, axis=1)
 
+# Reports and roc curve
+print(classification_report(y,y_pred))
+plot_roc_curve(y, y_pred_proba[:,1], fig_args=dict(figsize=(8,8)))
 
-
+print("Done !")
