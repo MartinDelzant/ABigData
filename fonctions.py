@@ -4,10 +4,12 @@ import numpy as np
 import os
 import re
 from nltk.stem.porter import PorterStemmer
+from nltk.stem import WordNetLemmatizer
 import nltk
 import string
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
+
 
 def loadData(train=True, verbose=False):
     """
@@ -57,6 +59,19 @@ def myFeatures(string):
     len(re.findall(r'[0-9]', string))
     ]
 
+def lemmatize(data):
+	data2=[None]*len(data)
+	wordnet_lemmatizer = WordNetLemmatizer()
+
+	for doc_id, text in enumerate(data):
+		# Tokenization
+		tokens=nltk.word_tokenize(text.decode("utf-8"))
+		
+		# Lemmatize each text
+		doc = ' '.join([wordnet_lemmatizer.lemmatize(w,pos='v') for w in tokens])
+		data2[doc_id] = doc
+	return data2
+		
 def preprocess(data):
     data = [ re.sub(r"<.*>"," ",text) for text in data ]
     punctuation = set(string.punctuation)
@@ -65,8 +80,8 @@ def preprocess(data):
     data = [ " ".join([ stemmer.stem(m) for m in nltk.word_tokenize(text.decode("utf-8")) if m not in punctuation ]) for text in data]   
     # re.sub(r"<.*>","",review2)
     #TODO features a la mano !!
-    #TODO : Count break ... 
-    return data
+    #TODO : Count break ...
+	    return data
     
 def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
     """
