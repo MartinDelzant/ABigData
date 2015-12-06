@@ -75,6 +75,7 @@ def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
     myauc = auc(fpr,tpr)
     plt.figure(**fig_args)
     plt.plot(fpr, tpr, label="AUC: %0.3f"%(myauc), **kwargs)
+    plt.legend()
     plt.show()
 
 
