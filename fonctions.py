@@ -77,7 +77,6 @@ def lemmatize(data):
         wordnet_lemmatizer.lemmatize(w,pos='v') for w in nltk.word_tokenize(text)
         ]) for text in data]
 
-<<<<<<< HEAD
 
 def preprocess(data, text_preproc_params=dict(name="wordnet"),
                tfidf_params=dict()):
@@ -91,29 +90,6 @@ def preprocess(data, text_preproc_params=dict(name="wordnet"),
 
 
 def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
-=======
-	for doc_id, text in enumerate(data):
-		# Tokenization
-		tokens=nltk.word_tokenize(text)
-		
-		# Lemmatize each text
-		doc = ' '.join([wordnet_lemmatizer.lemmatize(w,pos='v') for w in tokens])
-		data2[doc_id] = doc
-	return data2
-		
-def preprocess(data):
-    data = [ re.sub(r"<.*?>"," ",text) for text in data ] # Non-greedy regex !! 
-    punctuation = set(string.punctuation)
-    stemmer = PorterStemmer()
-    #data2 = [ [ stemmer.stem(m.lower() for m in re.sub(text,regex_punctuation," ").split() if m.lower() not in punctuation ]  for text in data2]
-    data = [ " ".join([ stemmer.stem(m) for m in nltk.word_tokenize(text.decode("utf-8")) if m not in punctuation ]) for text in data]   
-    # re.sub(r"<.*>","",review2)
-    #TODO features a la mano !!
-    #TODO : Count break ...
-	return data
-    
-def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
->>>>>>> 4c76f3e4226c5a07593e819fb7f628cfa3afcb05
     """
     probas : Probability of having class 1
     """
