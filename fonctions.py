@@ -66,7 +66,7 @@ def lemmatize(data):
 
 	for doc_id, text in enumerate(data):
 		# Tokenization
-		tokens=nltk.word_tokenize(text.decode("utf-8"))
+		tokens=nltk.word_tokenize(text)
 		
 		# Lemmatize each text
 		doc = ' '.join([wordnet_lemmatizer.lemmatize(w,pos='v') for w in tokens])
