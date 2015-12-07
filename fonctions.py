@@ -56,7 +56,8 @@ def myFeatures(string):
     string.count('?'),
     len(re.findall(r'\W',string)),
     len(re.findall(r'10', string)),
-    len(re.findall(r'[0-9]', string))
+    len(re.findall(r'[0-9]', string)),
+    string.count('<')
     ]
 
 def lemmatize(data):
@@ -73,7 +74,7 @@ def lemmatize(data):
 	return data2
 		
 def preprocess(data):
-    data = [ re.sub(r"<.*>"," ",text) for text in data ]
+    data = [ re.sub(r"<.*?>"," ",text) for text in data ] # Non-greedy regex !! 
     punctuation = set(string.punctuation)
     stemmer = PorterStemmer()
     #data2 = [ [ stemmer.stem(m.lower() for m in re.sub(text,regex_punctuation," ").split() if m.lower() not in punctuation ]  for text in data2]
@@ -96,3 +97,10 @@ def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
     plt.ylabel("True Positive Rate")
     plt.legend()
     plt.show()
+
+def print_top_words(model, feature_names, n_top_words):
+    for topic_idx, topic in enumerate(model.components_):
+        print("Topic #%d:" % topic_idx)
+        print(" ".join([feature_names[i]
+                        for i in topic.argsort()[:-n_top_words - 1:-1]]))
+    print()
