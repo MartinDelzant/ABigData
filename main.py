@@ -1,44 +1,35 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Nov 30 16:13:54 2015
 
-@author: martin
-"""
-
-import pandas as pd 
 import numpy as np
-import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.cross_validation import StratifiedKFold, cross_val_score
 from sklearn.naive_bayes import MultinomialNB
-import re
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, classification_report, auc
-from sklearn.decomposition import NMF, LatentDirichletAllocation
-from nltk.stem.porter import PorterStemmer
-import nltk
-import string
+from sklearn.metrics import classification_report
+from sklearn.pipeline import make_pipeline
+# from sklearn.decomposition import NMF, LatentDirichletAllocation
 from fonctions import *
 
 print("Loading training set")
 data, y = loadTrainSet()
 cv = StratifiedKFold(y, n_folds=10, shuffle=True, random_state=41)
 
-#TO UNCOMMENT : data = preprocess(data)
+print("preprocess ...")
+X, myfeat, preprocess_pipeline = preprocess(data)
 
-#TODO features a la main !!
-print("Tfidf ...")
-tfidf = TfidfVectorizer(ngram_range=(1,2), min_df=2, max_df=0.95, stop_words='english')
-X = tfidf.fit_transform(data)
-inv_voc = {v:k for k,v in tfidf.vocabulary_.items()}
+# TODO features a la main !!
+# print("Tfidf ...")
+# tfidf = TfidfVectorizer(ngram_range=(1, 2),
+#     min_df=2, max_df=0.95, stop_words='english')
+# X = tfidf.fit_transform(data)
+# inv_voc = {v: k for k, v in tfidf.vocabulary_.items()}
 
-print("k Best...") # Selecting the Kbest to see which word come out first. 
-kBest = SelectKBest(chi2, k=25)
-kBest.fit(X,y)
-print('"\t"'.join([inv_voc[index] for index in np.argsort(kBest.scores_)[::-1][:25]]))
+# print("k Best...")  # Selecting the Kbest to see which word come out first.
+# kBest = SelectKBest(chi2, k=25)
+# kBest.fit(X, y)
+# print('"\t"'.join([inv_voc[index] for index in np.argsort(kBest.scores_)[::-1][:25]]))
 
-## Printing scores and roc curve :
+# Printing scores and roc curve :
 model = MultinomialNB(alpha=0.5)
 scores_accuracy = cross_val_score(model, X,y,cv=cv, n_jobs=-1)
 scores_roc_auc = cross_val_score(model, X,y,cv=cv, n_jobs=-1, scoring="roc_auc")

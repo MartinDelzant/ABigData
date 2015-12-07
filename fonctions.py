@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import pandas as pd 
+import pandas as pd
 import numpy as np
 import os
 import re
@@ -9,7 +9,9 @@ import nltk
 import string
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
-
+from transformer import MyTextPreprocessor
+from sklearn.pipeline import make_pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 def loadData(train=True, verbose=False):
     """
@@ -28,6 +30,7 @@ def loadData(train=True, verbose=False):
                     content = content_file.read() #assume that there are NO "new line characters"
                     data.append(content)
         return data
+
     data = []
     if train:
         data.extend(loadTemp('./data/train/pos', verbose=False))
@@ -48,55 +51,58 @@ def loadTrainSet(shuffle=False, dataFrame=False, verbose=False):
         
     return data, label
 
+
 def myFeatures(string):
+    all_notes = re.findall(r'[0-9]0? *?/ *?10', string)
+    if len(all_notes)>1:
+        print(all_notes)
     return [
-    len(string),
-    string.count('.'),
-    string.count('!'),
-    string.count('?'),
-    len(re.findall(r'\W',string)),
-    len(re.findall(r'10', string)),
-    len(re.findall(r'[0-9]', string)),
-    string.count('<')
-    ]
+        len(string),
+        string.count('.'),
+        string.count('!'),
+        string.count('?'),
+        len(re.findall(r'[^0-9a-zA-Z_ ]', string)),  # Non aplha numeric
+        len(re.findall(r'10', string)),
+        len(re.findall(r'[0-9]', string)),
+        string.count('<'),
+        len(re.findall(r'star(s)?', string)),
+        np.mean([int(x.split('/')[0].strip()) for x in all_notes]) if all_notes else -1,
+        len(re.findall(r'[A-Z]', string))
+        ]
+
 
 def lemmatize(data):
-	data2=[None]*len(data)
 	wordnet_lemmatizer = WordNetLemmatizer()
+	return [' '.join([
+        wordnet_lemmatizer.lemmatize(w,pos='v') for w in nltk.word_tokenize(text)
+        ]) for text in data]
 
-	for doc_id, text in enumerate(data):
-		# Tokenization
-		tokens=nltk.word_tokenize(text.decode("utf-8"))
-		
-		# Lemmatize each text
-		doc = ' '.join([wordnet_lemmatizer.lemmatize(w,pos='v') for w in tokens])
-		data2[doc_id] = doc
-	return data2
-		
-def preprocess(data):
-    data = [ re.sub(r"<.*?>"," ",text) for text in data ] # Non-greedy regex !! 
-    punctuation = set(string.punctuation)
-    stemmer = PorterStemmer()
-    #data2 = [ [ stemmer.stem(m.lower() for m in re.sub(text,regex_punctuation," ").split() if m.lower() not in punctuation ]  for text in data2]
-    data = [ " ".join([ stemmer.stem(m) for m in nltk.word_tokenize(text.decode("utf-8")) if m not in punctuation ]) for text in data]   
-    # re.sub(r"<.*>","",review2)
-    #TODO features a la mano !!
-    #TODO : Count break ...
-	    return data
-    
-def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
+
+def preprocess(data, text_preproc_params=dict(name="wordnet"),
+               tfidf_params=dict()):
+    # Compute the features before any preprocess
+    myfeat = np.array(list(map(myFeatures, data)))
+    data = [re.sub(r"<.*?>", " ", text) for text in data]  # Non-greedy regex
+    preprocess_pipe = make_pipeline(MyTextPreprocessor(**text_preproc_params),
+                                    TfidfVectorizer(**tfidf_params))
+    data = preprocess_pipe.fit_transform(data)
+    return data, myfeat, preprocess_pipe
+
+
+def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
     """
     probas : Probability of having class 1
     """
     fpr, tpr, thres = roc_curve(y_true, probas)
-    myauc = auc(fpr,tpr)
+    myauc = auc(fpr, tpr)
     plt.figure(**fig_args)
-    plt.plot(fpr, tpr, label="AUC: %0.3f"%(myauc), **kwargs)
-    plt.plot([0,1], [0,1], '--')
+    plt.plot(fpr, tpr, label="AUC: %0.3f" % (myauc), **kwargs)
+    plt.plot([0, 1], [0, 1], '--')
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend()
     plt.show()
+
 
 def print_top_words(model, feature_names, n_top_words):
     for topic_idx, topic in enumerate(model.components_):
