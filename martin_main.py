@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 30 16:13:54 2015
+
+@author: martin
+"""
+
 import pandas as pd 
 import numpy as np
 import os
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.cross_validation import StratifiedKFold, cross_val_score
+from sklearn.naive_bayes import MultinomialNB
 import re
-from nltk.stem.porter import PorterStemmer
-from nltk.stem import WordNetLemmatizer
-import nltk
-import string
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
-
 
 def loadData(train=True, verbose=False):
     """
@@ -59,40 +62,24 @@ def myFeatures(string):
     len(re.findall(r'[0-9]', string))
     ]
 
-def lemmatize(data):
-	data2=[None]*len(data)
-	wordnet_lemmatizer = WordNetLemmatizer()
-
-	for doc_id, text in enumerate(data):
-		# Tokenization
-		tokens=nltk.word_tokenize(text.decode("utf-8"))
-		
-		# Lemmatize each text
-		doc = ' '.join([wordnet_lemmatizer.lemmatize(w,pos='v') for w in tokens])
-		data2[doc_id] = doc
-	return data2
-		
-def preprocess(data):
-    data = [ re.sub(r"<.*>"," ",text) for text in data ]
-    punctuation = set(string.punctuation)
-    stemmer = PorterStemmer()
-    #data2 = [ [ stemmer.stem(m.lower() for m in re.sub(text,regex_punctuation," ").split() if m.lower() not in punctuation ]  for text in data2]
-    data = [ " ".join([ stemmer.stem(m) for m in nltk.word_tokenize(text.decode("utf-8")) if m not in punctuation ]) for text in data]   
-    # re.sub(r"<.*>","",review2)
+if __name__=='__main__':
+    print("Loading training set")
+    data, y = loadTrainSet()
+    cv = StratifiedKFold(y, n_folds=10, shuffle=True, random_state=41)
     #TODO features a la mano !!
-    #TODO : Count break ...
-	    return data
+    print("Tfidf ...")
+    tfidf = TfidfVectorizer()
+    X = tfidf.fit_transform(data)
+    inv_voc = {v:k for k,v in tfidf.vocabulary_.items()}
     
-def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
-    """
-    probas : Probability of having class 1
-    """
-    fpr, tpr, thres = roc_curve(y_true, probas)
-    myauc = auc(fpr,tpr)
-    plt.figure(**fig_args)
-    plt.plot(fpr, tpr, label="AUC: %0.3f"%(myauc), **kwargs)
-    plt.plot([0,1], [0,1], '--')
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.legend()
-    plt.show()
+    print("k Best...")
+    kBest = SelectKBest(chi2, k=25)
+    kBest.fit(X,y)
+    print(' '.join([inv_voc[index] for index in kBest.get_support(indices=True)]))
+    
+    nb = MultinomialNB(alpha=0.5)
+    scores_accuracy = cross_val_score(nb, X,y,cv=cv, n_jobs=-1)
+    scores_roc_auc = cross_val_score(nb, X,y,cv=cv, n_jobs=-1, scoring="roc_auc")
+    print("Accuracy :\n", round(np.mean(scores_accuracy), 4), "+/-", round(2*np.std(scores_accuracy),4))
+    print("ROC AUC : \n", round(np.mean(scores_roc_auc), 4), "+/-", round(2*np.std(scores_roc_auc),4))
+    print("Done !")
