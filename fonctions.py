@@ -12,7 +12,6 @@ from sklearn.metrics import roc_curve, auc
 from transformer import MyTextPreprocessor
 from sklearn.pipeline import make_pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
-from joblib import Parallel, delayed
 
 def loadData(train=True, verbose=False):
     """
@@ -100,21 +99,6 @@ def preprocess(data, lemmatizer=None, stemmer=None):
         return myfeat, tokenized_sentence, postag
 
     return list(zip(*map(preprocess_string, data)))
-
-    # # Compute the features before any preprocess
-    # myfeat = np.array(list(map(myFeatures, data)))
-    # data = [re.sub(r"<.*?>", " ", text) for text in data]  # Non-greedy regex
-    # lemmatizer = WordNetLemmatizer()
-
-    # def tokenizer(sentence):
-    #     return [lemmatizer.lemmatize(x)
-    #             for x in nltk.word_tokenize(sentence)]
-
-    # preprocess_pipe = make_pipeline(MyTextPreprocessor(**text_preproc_params),
-    #                                 TfidfVectorizer(**tfidf_params))
-    # data = preprocess_pipe.fit_transform(data)
-    # return data, myfeat, preprocess_pipe
-
 
 def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
     """

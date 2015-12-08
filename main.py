@@ -32,8 +32,8 @@ tfidfChar = TfidfVectorizer(ngram_range=(3, 5),
 X_char = tfidfChar.fit_transform(data)
 inv_vocChar = {v :k for k, v in tfidfChar.vocabulary_.items()}
 
-# Not tested yet ... 
-countPOS = CountVectorizer(tokenizer=lambda x: x.split("##"), 
+# Not tested yet ...
+countPOS = CountVectorizer(tokenizer=lambda x: x.split("##"),
 	ngram_range=(1,4), lowercase=False, min_df=2)
 pos_tag = countPOS.fit_transform(pos_tag)
 
@@ -52,13 +52,13 @@ print('"\t"'.join([inv_vocChar[index] for index in np.argsort(kBestChar.scores_)
 
 # Printing scores and roc curve :
 model = MultinomialNB(alpha=0.5)
-scores_accuracy = cross_val_score(model, X,y,cv=cv, n_jobs=-1)
-scores_roc_auc = cross_val_score(model, X,y,cv=cv, n_jobs=-1, scoring="roc_auc")
+scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
+scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
 print("Accuracy :\n", round(np.mean(scores_accuracy), 4), "+/-", round(2*np.std(scores_accuracy),4))
 print("ROC AUC : \n", round(np.mean(scores_roc_auc), 4), "+/-", round(2*np.std(scores_roc_auc),4))
 
 #creating the cross_val predict and predict_proba :
-y_pred_proba = np.zeros((y.shape[0],2))
+y_pred_proba = np.zeros((y.shape[0], 2))
 for train_idx, test_idx in cv:
     model.fit(X[train_idx], y[train_idx])
     y_pred_proba[test_idx] = model.predict_proba(X[test_idx])
