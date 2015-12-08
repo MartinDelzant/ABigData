@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.cross_validation import StratifiedKFold, cross_val_score
 from sklearn.naive_bayes import MultinomialNB
@@ -15,19 +15,40 @@ data, y = loadTrainSet()
 cv = StratifiedKFold(y, n_folds=10, shuffle=True, random_state=41)
 
 print("preprocess ...")
-X, myfeat, preprocess_pipeline = preprocess(data)
+myFeat, data, pos_tag = preprocess(data)
 
-# TODO features a la main !!
-# print("Tfidf ...")
-# tfidf = TfidfVectorizer(ngram_range=(1, 2),
-#     min_df=2, max_df=0.95, stop_words='english')
-# X = tfidf.fit_transform(data)
-# inv_voc = {v: k for k, v in tfidf.vocabulary_.items()}
+print("Tfidf ...")
+# Stop words : Yes /No ?
+# regex : Yes / No ?
+# sublinear tf : Y/N ?
+# ...
+tfidfWord = TfidfVectorizer(ngram_range=(1, 2),
+    min_df=2, max_df=0.95)
+X = tfidfWord.fit_transform(data)
+inv_voc = {v: k for k, v in tfidfWord.vocabulary_.items()}
 
-# print("k Best...")  # Selecting the Kbest to see which word come out first.
-# kBest = SelectKBest(chi2, k=25)
-# kBest.fit(X, y)
-# print('"\t"'.join([inv_voc[index] for index in np.argsort(kBest.scores_)[::-1][:25]]))
+tfidfChar = TfidfVectorizer(ngram_range=(3, 5),
+	min_df=2, max_df=0.95, analyzer='char')
+X_char = tfidfChar.fit_transform(data)
+inv_vocChar = {v :k for k, v in tfidfChar.vocabulary_.items()}
+
+# Not tested yet ... 
+countPOS = CountVectorizer(tokenizer=lambda x: x.split("##"), 
+	ngram_range=(1,4), lowercase=False, min_df=2)
+pos_tag = countPOS.fit_transform(pos_tag)
+
+
+print("k Best...")  # Selecting the Kbest to see which word come out first.
+kBest = SelectKBest(chi2, k=25)
+kBest.fit(X, y)
+print('"\t"'.join([inv_voc[index] for index in np.argsort(kBest.scores_)[::-1][:25]]))
+
+print("k Best...")  # Selecting the Kbest to see which char come out first.
+kBestChar = SelectKBest(chi2, k=25)
+kBestChar.fit(X, y)
+print('"\t"'.join([inv_vocChar[index] for index in np.argsort(kBestChar.scores_)[::-1][:25]]))
+
+# TODO : hstack the matrices
 
 # Printing scores and roc curve :
 model = MultinomialNB(alpha=0.5)
