@@ -9,9 +9,6 @@ import nltk
 import string
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
-from transformer import MyTextPreprocessor
-from sklearn.pipeline import make_pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 def loadData(train=True, verbose=False):
     """
