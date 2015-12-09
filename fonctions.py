@@ -83,7 +83,7 @@ def preprocess(data, lemmatizer=None, stemmer=None):
 
     def preprocess_string(sentence, lemmatizer=lemmatizer, stemmer=stemmer):
         myfeat = myFeatures(sentence)
-        tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence))
+        tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence.decode("utf-8")))
         # POS tagging :
         # postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
         postag = '##'.join(list(map(lambda x : x[1], nltk.pos_tag(tokenized_sentence))))
