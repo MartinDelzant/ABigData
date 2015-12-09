@@ -85,7 +85,8 @@ def preprocess(data, lemmatizer=None, stemmer=None):
         myfeat = myFeatures(sentence)
         tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence))
         # POS tagging :
-        postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
+        # postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
+        postag = '##'.join(list(map(lambda x : x[1], nltk.pos_tag(tokenized_sentence))))
         if lemmatizer is not None:  # by default lemmatize. Else stem...
             tokenized_sentence = [lemmatizer.lemmatize(word, pos='v')
                                   for word in tokenized_sentence]
