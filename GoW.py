@@ -13,12 +13,20 @@ import math
 #sliding_window: window size
 #train_par: if true we are in the training documents
 #idf_learned
-def createGraphFeatures(num_documents,clean_train_documents,unique_words,sliding_window,train_par,idf_learned):
+def createGraphFeatures(clean_train_documents,sliding_window,train_par = False,idf_learned = None):
+    num_documents = len(clean_train_documents)
+    unique_words = set()
+    for s in clean_train_documents :
+	ms = s.split()
+	for m in ms :
+		unique_words.add(m)
+    
     features = np.zeros((num_documents,len(unique_words)))#where we are going to put the features
     unique_words_len = len(unique_words)
     term_num_docs = {} #dictionay of each word with a count of that word through out the collections
     idf_col = {}#dictionay of each word with the idf of that word
-    
+   
+    print("Created unique words :",unique_words_len,", starting idf") 
     #TO DO:
     #1.idf_col:IDF for the collection
     #    if in training phase compute it
@@ -45,7 +53,7 @@ def createGraphFeatures(num_documents,clean_train_documents,unique_words,sliding
         idf_col = idf_learned 
         term_num_docs=unique_words
 
-    print "Creating the graph of words for each document..."
+    print("Creating the graph of words for each document...")
     totalNodes = 0
     totalEdges = 0
 
