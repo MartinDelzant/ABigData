@@ -15,7 +15,8 @@ data, y = loadTrainSet()
 cv = StratifiedKFold(y, n_folds=10, shuffle=True, random_state=41)
 
 print("preprocess ...")
-myFeat, data, pos_tag = preprocess(data)
+myFeat,data = preprocess(data)
+#myFeat, data, pos_tag = preprocess(data)
 
 print("Tfidf ...")
 # Stop words : Yes /No ?

@@ -7,7 +7,7 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 import nltk
 import string
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 
 def loadData(train=True, verbose=False):
@@ -85,16 +85,20 @@ def preprocess(data, lemmatizer=None, stemmer=None):
         myfeat = myFeatures(sentence)
         tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence.decode("utf-8")))
         # POS tagging :
-        # postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
-        postag = '##'.join(list(map(lambda x : x[1], nltk.pos_tag(tokenized_sentence))))
-        if lemmatizer is not None:  # by default lemmatize. Else stem...
+        # Former version of the code, seems longer :
+	# postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
+        
+	# Pos-tagging seems to be the bottleneck here
+	# postag = '##'.join(list(map(lambda x : x[1], nltk.pos_tag(tokenized_sentence))))
+        
+	if lemmatizer is not None:  # by default lemmatize. Else stem...
             tokenized_sentence = [lemmatizer.lemmatize(word, pos='v')
                                   for word in tokenized_sentence]
         if stemmer is not None:
             tokenized_sentence = [stemmer.stem(word)
                                   for word in tokenized_sentence]
         tokenized_sentence = " ".join(tokenized_sentence)
-        return myfeat, tokenized_sentence, postag
+        return myfeat, tokenized_sentence #, postag
 
     return list(zip(*map(preprocess_string, data)))
 
