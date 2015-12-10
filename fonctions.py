@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import pandas as pd 
+import pandas as pd
 import numpy as np
 import os
 import re
@@ -9,7 +9,6 @@ import nltk
 import string
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
-
 
 def loadData(train=True, verbose=False):
     """
@@ -28,6 +27,7 @@ def loadData(train=True, verbose=False):
                     content = content_file.read() #assume that there are NO "new line characters"
                     data.append(content)
         return data
+
     data = []
     if train:
         data.extend(loadTemp('./data/train/pos', verbose=False))
@@ -48,55 +48,69 @@ def loadTrainSet(shuffle=False, dataFrame=False, verbose=False):
         
     return data, label
 
+
 def myFeatures(string):
+    all_notes = re.findall(r'[0-9]0? *?/ *?10', string)
+    if len(all_notes)>1:
+        print(all_notes)
     return [
-    len(string),
-    string.count('.'),
-    string.count('!'),
-    string.count('?'),
-    len(re.findall(r'\W',string)),
-    len(re.findall(r'10', string)),
-    len(re.findall(r'[0-9]', string)),
-    string.count('<')
-    ]
+        len(string),
+        string.count('.'),
+        string.count('!'),
+        string.count('?'),
+        len(re.findall(r'[^0-9a-zA-Z_ ]', string)),  # Non aplha numeric
+        len(re.findall(r'10', string)),
+        len(re.findall(r'[0-9]', string)),
+        string.count('<'),
+        len(re.findall(r'star(s)?', string)),
+        np.mean([int(x.split('/')[0].strip()) for x in all_notes]) if all_notes else -1,
+        len(re.findall(r'[A-Z]', string))
+        ]
+
 
 def lemmatize(data):
-	data2=[None]*len(data)
 	wordnet_lemmatizer = WordNetLemmatizer()
+	return [' '.join([
+        wordnet_lemmatizer.lemmatize(w,pos='v') for w in nltk.word_tokenize(text)
+        ]) for text in data]
 
-	for doc_id, text in enumerate(data):
-		# Tokenization
-		tokens=nltk.word_tokenize(text)
-		
-		# Lemmatize each text
-		doc = ' '.join([wordnet_lemmatizer.lemmatize(w,pos='v') for w in tokens])
-		data2[doc_id] = doc
-	return data2
-		
-def preprocess(data):
-    data = [ re.sub(r"<.*?>"," ",text) for text in data ] # Non-greedy regex !! 
-    punctuation = set(string.punctuation)
-    stemmer = PorterStemmer()
-    #data2 = [ [ stemmer.stem(m.lower() for m in re.sub(text,regex_punctuation," ").split() if m.lower() not in punctuation ]  for text in data2]
-    data = [ " ".join([ stemmer.stem(m) for m in nltk.word_tokenize(text.decode("utf-8")) if m not in punctuation ]) for text in data]   
-    # re.sub(r"<.*>","",review2)
-    #TODO features a la mano !!
-    #TODO : Count break ...
-	return data
-    
-def plot_roc_curve(y_true, probas, fig_args = dict(), **kwargs):
+
+def pos_tag(tokenized_sentence):
+    return [nltk.pos_tag(token) for token in tokenized_sentence]
+
+
+def preprocess(data, lemmatizer=None, stemmer=None):
+
+    def preprocess_string(sentence, lemmatizer=lemmatizer, stemmer=stemmer):
+        myfeat = myFeatures(sentence)
+        tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence))
+        # POS tagging :
+        postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
+        if lemmatizer is not None:  # by default lemmatize. Else stem...
+            tokenized_sentence = [lemmatizer.lemmatize(word, pos='v')
+                                  for word in tokenized_sentence]
+        if stemmer is not None:
+            tokenized_sentence = [stemmer.stem(word)
+                                  for word in tokenized_sentence]
+        tokenized_sentence = " ".join(tokenized_sentence)
+        return myfeat, tokenized_sentence, postag
+
+    return list(zip(*map(preprocess_string, data)))
+
+def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
     """
     probas : Probability of having class 1
     """
     fpr, tpr, thres = roc_curve(y_true, probas)
-    myauc = auc(fpr,tpr)
+    myauc = auc(fpr, tpr)
     plt.figure(**fig_args)
-    plt.plot(fpr, tpr, label="AUC: %0.3f"%(myauc), **kwargs)
-    plt.plot([0,1], [0,1], '--')
+    plt.plot(fpr, tpr, label="AUC: %0.3f" % (myauc), **kwargs)
+    plt.plot([0, 1], [0, 1], '--')
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend()
     plt.show()
+
 
 def print_top_words(model, feature_names, n_top_words):
     for topic_idx, topic in enumerate(model.components_):
