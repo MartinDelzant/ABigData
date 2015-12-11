@@ -45,7 +45,7 @@ print('"\t"'.join([inv_voc[index] for index in np.argsort(kBest.scores_)[::-1][:
 
 print("k Best...")  # Selecting the Kbest to see which char come out first.
 kBestChar = SelectKBest(chi2, k=25)
-kBestChar.fit(X, y)
+kBestChar.fit(X_char, y)
 print('"\t"'.join([inv_vocChar[index] for index in np.argsort(kBestChar.scores_)[::-1][:25]]))
 
 # TODO : hstack the matrices
