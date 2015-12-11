@@ -58,4 +58,7 @@ target/
 
 #Data folder
 data/
+postag/
 /martin-main.py~
+/postag.tar.gz
+/svd.txt
