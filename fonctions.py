@@ -10,6 +10,7 @@ import string
 #import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 
+
 def loadData(train=True, verbose=False):
     """
     loadData() for the training set
@@ -18,10 +19,10 @@ def loadData(train=True, verbose=False):
     def loadTemp(path, verbose=False):
         data = []
         if verbose:
-            i=0
+            i = 0
         for _, _, files in os.walk(path):
             for file in files:
-                if verbose and i%100 == 0:
+                if verbose and i % 100 == 0:
                     print(i, file)
                 with open(path+"/"+file, 'r') as content_file:
                     content = content_file.read() #assume that there are NO "new line characters"
@@ -83,24 +84,20 @@ def preprocess(data, lemmatizer=None, stemmer=None):
 
     def preprocess_string(sentence, lemmatizer=lemmatizer, stemmer=stemmer):
         myfeat = myFeatures(sentence)
-        tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence.decode("utf-8")))
+        tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence))
         # POS tagging :
-        # Former version of the code, seems longer :
-	# postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
-        
-	# Pos-tagging seems to be the bottleneck here
-	# postag = '##'.join(list(map(lambda x : x[1], nltk.pos_tag(tokenized_sentence))))
-        
-	if lemmatizer is not None:  # by default lemmatize. Else stem...
+        # postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
+        if lemmatizer is not None:  # by default lemmatize. Else stem...
             tokenized_sentence = [lemmatizer.lemmatize(word, pos='v')
                                   for word in tokenized_sentence]
         if stemmer is not None:
             tokenized_sentence = [stemmer.stem(word)
                                   for word in tokenized_sentence]
         tokenized_sentence = " ".join(tokenized_sentence)
-        return myfeat, tokenized_sentence #, postag
+        return myfeat, tokenized_sentence
 
-    return list(zip(*map(preprocess_string, data)))
+    myfeat, tokenized_data = list(zip(*map(preprocess_string, data)))
+    return myfeat, tokenized_data, loadPostag()
 
 def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
     """
@@ -123,3 +120,11 @@ def print_top_words(model, feature_names, n_top_words):
         print(" ".join([feature_names[i]
                         for i in topic.argsort()[:-n_top_words - 1:-1]]))
     print()
+
+
+def loadPostag():
+    postag = []
+    for i in range(25000):
+        with open("postag/postag_%u.txt" % (i), "r") as myfile:
+            postag.append(myfile.readline())
+    return postag
