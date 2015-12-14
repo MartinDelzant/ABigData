@@ -58,7 +58,7 @@ GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB(alpha=0.5)), params,
 GridSearchCV(make_pipeline(SelectKBest(f_classif), MultinomialNB(alpha=0.5)), params, cv=cv, verbose=1)
 ]
 for model in models:
-    model.fit(sparse.hstack(X, X_char),y)
+    model.fit(sparse.hstack((X, X_char)),y)
     scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
     scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
 
