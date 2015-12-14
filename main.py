@@ -2,13 +2,15 @@
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import SelectKBest, chi2, f_classif
 from sklearn.cross_validation import StratifiedKFold, cross_val_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
+from sklearn.grid_search import GridSearchCV
 # from sklearn.decomposition import NMF, LatentDirichletAllocation
 from fonctions import *
+from scipy import sparse
 
 print("Loading training set")
 data, y = loadTrainSet()
@@ -16,7 +18,6 @@ cv = StratifiedKFold(y, n_folds=5, shuffle=True, random_state=41)
 
 print("preprocess ...")
 myFeat,data, pos_tag = preprocess(data)
-#myFeat, data, pos_tag = preprocess(data)
 
 print("Tfidf ...")
 # Stop words : Yes /No ?
@@ -50,14 +51,20 @@ kBestChar.fit(X_char, y)
 print('"\t"'.join([inv_vocChar[index] for index in np.argsort(kBestChar.scores_)[::-1][:25]]))
 
 # TODO : hstack the matrices
-
+params = {"selectkbest__k":range(10000, 1000000, 5000), "multinomialnb__alpha":np.logspace(-3,3,10)}
 # Printing scores and roc curve :
-model = MultinomialNB(alpha=0.5)
-scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
-scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
-print("Accuracy :\n", round(np.mean(scores_accuracy), 4), "+/-", round(2*np.std(scores_accuracy),4))
-print("ROC AUC : \n", round(np.mean(scores_roc_auc), 4), "+/-", round(2*np.std(scores_roc_auc),4))
+models = [ # MultinomialNB(alpha=0.5), 
+GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB(alpha=0.5)), params, cv=cv, verbose=1),
+GridSearchCV(make_pipeline(SelectKBest(f_classif), MultinomialNB(alpha=0.5)), params, cv=cv, verbose=1)
+]
+for model in models:
+    model.fit(sparse.hstack(X, X_char),y)
+    scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
+    scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
 
+    print("Accuracy :\n", round(np.mean(scores_accuracy), 4), "+/-", round(2*np.std(scores_accuracy),4))
+    print("ROC AUC : \n", round(np.mean(scores_roc_auc), 4), "+/-", round(2*np.std(scores_roc_auc),4))
+"""
 #creating the cross_val predict and predict_proba :
 y_pred_proba = np.zeros((y.shape[0], 2))
 for train_idx, test_idx in cv:
@@ -68,5 +75,5 @@ y_pred = np.argmax(y_pred_proba, axis=1)
 # Reports and roc curve
 print(classification_report(y,y_pred))
 plot_roc_curve(y, y_pred_proba[:,1], fig_args=dict(figsize=(8,8)))
-
+"""
 print("Done !")
