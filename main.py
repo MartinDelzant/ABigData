@@ -28,12 +28,13 @@ tfidfWord = TfidfVectorizer(ngram_range=(1, 2),
     min_df=2, max_df=0.95)
 X = tfidfWord.fit_transform(data)
 inv_voc = {v: k for k, v in tfidfWord.vocabulary_.items()}
-
+print('tfidf char')
 tfidfChar = TfidfVectorizer(ngram_range=(3, 5),
 	min_df=2, max_df=0.95, analyzer='char')
 X_char = tfidfChar.fit_transform(data)
 inv_vocChar = {v :k for k, v in tfidfChar.vocabulary_.items()}
 
+print('CountPOS tfidf')
 # Not tested yet ...
 countPOS = CountVectorizer(tokenizer=lambda x: x.split("##"),
 	ngram_range=(1,4), lowercase=False, min_df=2)
@@ -58,7 +59,7 @@ GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB(alpha=0.5)), params,
 GridSearchCV(make_pipeline(SelectKBest(f_classif), MultinomialNB(alpha=0.5)), params, cv=cv, verbose=1)
 ]
 for model in models:
-    model.fit(sparse.hstack(X, X_char),y)
+    model.fit(sparse.hstack((X, X_char)),y)
     scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
     scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
 
