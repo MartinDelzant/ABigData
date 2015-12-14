@@ -7,6 +7,7 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 import nltk
 import string
+from sys import getfilesystemencoding as myencoding
 #import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 
@@ -24,7 +25,7 @@ def loadData(train=True, verbose=False):
             for file in files:
                 if verbose and i % 100 == 0:
                     print(i, file)
-                with open(path+"/"+file, 'r') as content_file:
+                with open(path+"/"+file, 'r', encoding=myencoding()) as content_file:
                     content = content_file.read() #assume that there are NO "new line characters"
                     data.append(content)
         return data
