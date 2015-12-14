@@ -16,3 +16,41 @@ for line in sentences:
 
 dep_parser=stanford.StanfordDependencyParser(model_path="C:/Users/Guillaume/Documents/Scolarite/Master Data Sciences/Projets/englishPCFG.ser.gz")
 print([parse.tree() for parse in dep_parser.raw_parse("The quick brown fox jumps over the lazy dog.")])
+
+## split paragraph into sentences
+import nltk.data
+tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+print((tokenizer.tokenize(data[0]))
+
+# display attributes in a sentence as a list
+list(parser.raw_parse("the quick brown fox jumps over the lazy dog")) # return attribute of each word!
+[list(parse.triples()) for parse in dep_parser.raw_parse("The quick brown fox jumps over the lazy dog.")]
+
+[ ' '.join([a[1],b, c[1]]) for a,b,c in rel1[0]] #return VBZ nsubj NN
+
+## Apply lemmatizer to data before
+d=[]
+for j in data:
+	e=[]
+	ex1=tokenizer.tokenize(j)
+		for i in ex1:
+		rel1=[list(parse.triples()) for parse in dep_parser.raw_parse(i)]
+		e.extend([' '.join([a[1],b, c[1]]) for a,b,c in rel1[0]])
+	d.append(e)
+
+
+# count all the 2-grams relations
+rel1[0].count((('jumps', 'VBZ'), 'nsubj', ('fox', 'NN'))) ## return 1
+from collections import Counter
+Counter(rel1[0]) ## return each item and its number of occurence
+# actually, first I want to just count the different relations in a sentence
+for a in rel1[0]:
+	print(a[1]) ## print nsubj, det, amod...
+
+
+## TO DO: return the length of each sentence
+## TO DO: implement Beautiful Soup
+## TO DO: implement stopwords in TFidf
+## TO DO: implement log in TFIDF
+## TO DO: add list of negative words count & weigth in myFeatures
+
