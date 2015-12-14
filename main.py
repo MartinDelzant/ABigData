@@ -51,7 +51,7 @@ kBestChar.fit(X_char, y)
 print('"\t"'.join([inv_vocChar[index] for index in np.argsort(kBestChar.scores_)[::-1][:25]]))
 
 # TODO : hstack the matrices
-params = {"selectkbest__k":range(10000, 1000000, 5000), "multinomialnb__alpha":np.logspace(-3,3,10)}
+params = {"selectkbest__k":list(range(10000, 1000000, 5000)), "multinomialnb__alpha":np.logspace(-3,3,10)}
 # Printing scores and roc curve :
 models = [ # MultinomialNB(alpha=0.5), 
 GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB(alpha=0.5)), params, cv=cv, verbose=1),
