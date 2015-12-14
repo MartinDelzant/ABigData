@@ -7,6 +7,7 @@ import re
 import os.path
 import math
 from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.sparse import dok_matrix
 #num_documents: number of documents
 #clean_train_documents: the collection
 #unique_words: list of all the words we found 
@@ -33,12 +34,15 @@ def createGraphFeatures(clean_train_documents,sliding_window):
     print("Creating the graph of words for each document...")
     totalNodes = 0
     totalEdges = 0
-    features = np.zeros((num_documents,len(unique_words)))#where we are going to put the features
+    features = dok_matrix((num_documents,len(unique_words)))#where we are going to put the features
 
     #go over all documents
+    
+    unique_words = list(unique_words)
     for i in range( 0,num_documents ):
+        print(i)
         wordList1 = clean_train_documents[i].split(None)
-        wordList2 = [string.rstrip(x.lower(), ',.!?;') for x in wordList1]
+        wordList2 = [x.lower().rstrip( ',.!?;') for x in wordList1]
         docLen = len(wordList2)
         #the graph
         dG = nx.Graph()
