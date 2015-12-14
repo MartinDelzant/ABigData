@@ -54,12 +54,12 @@ def cross_val(clf_name, X, y, n_folds=5, proba=False, score=accuracy_score, *par
     y_pred = np.zeros(y.shape)
     score_list = []
     for i, (train, test) in enumerate(cv):
-        c.fit(X[train], y[train])
+        c.fit(X[train,:], y[train,:])
         if proba:
-            y_pred[test] = c.predict_proba(X[test])
+            y_pred[test,:] = c.predict_proba(X[test,:])
         else:
-            y_pred[test] = c.predict(X[test])
-        score_list.append(score(y[test], y_pred[test]))
+            y_pred[test,:] = c.predict(X[test,:])
+        score_list.append(score(y[test,:], y_pred[test,:]))
         print(score_list[i])
     return y_pred
 
