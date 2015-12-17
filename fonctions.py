@@ -81,10 +81,11 @@ def pos_tag(tokenized_sentence):
     return [nltk.pos_tag(token) for token in tokenized_sentence]
 
 
-def preprocess(data, lemmatizer=None, stemmer=None):
+def preprocess(data, lemmatizer=None, stemmer=None,load_postag = False,load_myfeat = False):
 
     def preprocess_string(sentence, lemmatizer=lemmatizer, stemmer=stemmer):
-        myfeat = myFeatures(sentence)
+        if load_myfeat :
+		myfeat = myFeatures(sentence)
         tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence))
         # POS tagging :
         # postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
@@ -95,10 +96,16 @@ def preprocess(data, lemmatizer=None, stemmer=None):
             tokenized_sentence = [stemmer.stem(word)
                                   for word in tokenized_sentence]
         tokenized_sentence = " ".join(tokenized_sentence)
-        return myfeat, tokenized_sentence
-
+	if load_myfeat :
+        	return myfeat, tokenized_sentence
+	else :
+		return None, tokenized_sentence
+	
     myfeat, tokenized_data = list(zip(*map(preprocess_string, data)))
-    return myfeat, tokenized_data, loadPostag()
+    if load_postag:
+    	return myfeat, tokenized_data, loadPostag()
+    else :
+	return myfeat, tokenized_data, None 
 
 def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
     """
