@@ -55,8 +55,8 @@ print('"\t"'.join([inv_vocChar[index] for index in np.argsort(kBestChar.scores_)
 params = {"selectkbest__k":list(range(10000, 1000000, 5000)), "multinomialnb__alpha":np.logspace(-3,3,10)}
 # Printing scores and roc curve :
 models = [ # MultinomialNB(alpha=0.5), 
-GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB(alpha=0.5)), params, cv=cv, verbose=1),
-GridSearchCV(make_pipeline(SelectKBest(f_classif), MultinomialNB(alpha=0.5)), params, cv=cv, verbose=1)
+GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB()), params, cv=cv, verbose=1),
+GridSearchCV(make_pipeline(SelectKBest(f_classif), MultinomialNB()), params, cv=cv, verbose=1)
 ]
 for model in models:
     model.fit(sparse.hstack((X, X_char)),y)

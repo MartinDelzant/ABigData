@@ -53,25 +53,26 @@ def xtrain_test():
 print(X_train.shape)
 cv = StratifiedKFold(y, n_folds=5, shuffle=True, random_state=41)
 # LinearSVC for k in 1000:100000:10000 -> best score k ~ 80000 (pen l2) C ~ 1 -> 90.9 en crossval
-for k in range(70000, 130001, 10000):
+for k in range(70000, 140001, 10000):
     for f in [chi2]:
         newX = SelectKBest(f, k).fit_transform(X_train,y)
         print("transformed")
-        for alpha in [0,*np.logspace(-20,-9,12)]:
+        for alpha in [0,*np.logspace(-21,-10,12)]:
             print("alpha", alpha, "k", k)
             print(cross_val_score(MultinomialNB(alpha=alpha), newX, y, cv=cv).mean())
 print("Done")
-models = [
-(Pipeline([('kbest', SelectKBest()), 
-#('model', SGDClassifier(average=10))]),
-('model', MultinomialNB())]),
- {'kbest__score_func':[chi2, f_classif], 'kbest__k':list(range(10000, 110001, 10000)),
- #"model__penalty":[ 'l2','l1','elasticnet'],"model__loss":['log'], "model__alpha":np.logspace(-7,2,10),"model__n_iter":[50]
-"model__alpha":np.logspace(-5,4,10)})
-]
 
-for model, params in models:
-	gdcv = GridSearchCV(model, params, cv=cv, verbose=3)
-	gdcv.fit(X_train, y)
-	report(gdcv.grid_scores_, n_top=10)
+# models = [
+# (Pipeline([('kbest', SelectKBest()), 
+# #('model', SGDClassifier(average=10))]),
+# ('model', MultinomialNB())]),
+#  {'kbest__score_func':[chi2, f_classif], 'kbest__k':list(range(10000, 110001, 10000)),
+#  #"model__penalty":[ 'l2','l1','elasticnet'],"model__loss":['log'], "model__alpha":np.logspace(-7,2,10),"model__n_iter":[50]
+# "model__alpha":np.logspace(-5,4,10)})
+# ]
+
+# for model, params in models:
+# 	gdcv = GridSearchCV(model, params, cv=cv, verbose=3)
+# 	gdcv.fit(X_train, y)
+# 	report(gdcv.grid_scores_, n_top=10)
 

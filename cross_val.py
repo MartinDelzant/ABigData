@@ -92,8 +92,8 @@ def cross_val_partial(clf_name, X, y, n_folds=5, n_iter = 5, max_iter=1000, *par
     for current_iter in range(0, max_iter, n_iter):
         scores = []
         for model, (train,test) in zip(all_models, cv):
-            model.fit(X[train], y[train])
-            scores.append(model.score(X[test], y[test]))
+            model.fit(X[train,:], y[train])
+            scores.append(model.score(X[test,:], y[test]))
         all_scores.append(np.mean(scores))
         print(current_iter, all_scores[-1],'\t',' '.join([str(round(score,4)) for score in scores]))
     print("N iter tot :" , all_models[0].t_)
