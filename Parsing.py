@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from nltk.parse import stanford
 os.environ['STANFORD_PARSER'] = 'C:/Users/Guillaume/Documents/Scolarite/Master Data Sciences/Projets/stanford-parser-full-2014-08-27'
@@ -20,7 +21,7 @@ print([parse.tree() for parse in dep_parser.raw_parse("The quick brown fox jumps
 ## split paragraph into sentences
 import nltk.data
 tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-print((tokenizer.tokenize(data[0]))
+print((tokenizer.tokenize(data[0])))
 
 # display attributes in a sentence as a list
 list(parser.raw_parse("the quick brown fox jumps over the lazy dog")) # return attribute of each word!
@@ -28,19 +29,27 @@ list(parser.raw_parse("the quick brown fox jumps over the lazy dog")) # return a
 
 [ ' '.join([a[1],b, c[1]]) for a,b,c in rel1[0]] #return VBZ nsubj NN
 
+
+## use BeautfiulSoup to avoid encoding problems...
+from bs4 import BeautifulSoup 
+example1 = BeautifulSoup(ex1[1])
+example1.get_text()
+### TO FINISH
+
 ## Apply lemmatizer to data before
 d=[]
 for i,j in enumerate(data):
 	print("YO", i)
 	e=[]
 	ex1=tokenizer.tokenize(j)
-	try:
-		for i in ex1:
-			rel1=[list(parse.triples()) for parse in dep_parser.raw_parse(i)]
-			e.extend([' '.join([a[1],b, c[1]]) for a,b,c in rel1[0]])
-	except :
-		print(i)
-		print(j)
+	rel1=[]
+
+
+	for i in ex1:
+		rel1=[list(parse.triples()) for parse in dep_parser.raw_parse(i)]
+		e.extend([' '.join([a[1],b, c[1]]) for a,b,c in rel1[0]])
+
+
 	d.append(e)
 
 
@@ -59,3 +68,5 @@ for a in rel1[0]:
 ## TO DO: implement log in TFIDF
 ## TO DO: add list of negative words count & weigth in myFeatures
 
+for c in ex1[1]:
+    print('%s,%d' %(c , ex1[1].index(c)))
