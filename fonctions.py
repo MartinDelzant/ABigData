@@ -7,9 +7,10 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 import nltk
 import string
-from sys import getfilesystemencoding as myencoding
+#from sys import getfilesystemencoding as myencoding
 #import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
+import codecs
 
 
 def loadData(train=True, verbose=False):
@@ -25,7 +26,7 @@ def loadData(train=True, verbose=False):
             for file in files:
                 if verbose and i % 100 == 0:
                     print(i, file)
-                with open(path+"/"+file, 'r', encoding=myencoding()) as content_file:
+                with codecs.open(path+"/"+file, 'r', encoding='utf-8') as content_file:
                     content = content_file.read() #assume that there are NO "new line characters"
                     data.append(content)
         return data
@@ -53,8 +54,8 @@ def loadTrainSet(shuffle=False, dataFrame=False, verbose=False):
 
 def myFeatures(string):
     all_notes = re.findall(r'[0-9]0? *?/ *?10', string)
-    if len(all_notes)>1:
-        print(all_notes)
+    #if len(all_notes)>1:
+        #print(all_notes)
     return [
         len(string),
         string.count('.'),
