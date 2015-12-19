@@ -30,12 +30,17 @@ list(parser.raw_parse("the quick brown fox jumps over the lazy dog")) # return a
 
 ## Apply lemmatizer to data before
 d=[]
-for j in data:
+for i,j in enumerate(data):
+	print("YO", i)
 	e=[]
 	ex1=tokenizer.tokenize(j)
+	try:
 		for i in ex1:
-		rel1=[list(parse.triples()) for parse in dep_parser.raw_parse(i)]
-		e.extend([' '.join([a[1],b, c[1]]) for a,b,c in rel1[0]])
+			rel1=[list(parse.triples()) for parse in dep_parser.raw_parse(i)]
+			e.extend([' '.join([a[1],b, c[1]]) for a,b,c in rel1[0]])
+	except :
+		print(i)
+		print(j)
 	d.append(e)
 
 
