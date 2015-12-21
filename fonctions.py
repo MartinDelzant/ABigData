@@ -80,6 +80,10 @@ def lemmatize(data):
 def pos_tag(tokenized_sentence):
     return [nltk.pos_tag(token) for token in tokenized_sentence]
 
+def use_beautifulsoup(data):
+    for i, item in enumerate(data):
+        data[i] = BeautifulSoup(item).get_text()
+    return data
 
 def preprocess(data, lemmatizer=None, stemmer=None,load_postag = False,load_myfeat = False):
 
@@ -105,7 +109,7 @@ def preprocess(data, lemmatizer=None, stemmer=None,load_postag = False,load_myfe
     if load_postag:
     	return myfeat, tokenized_data, loadPostag()
     else :
-	return myfeat, tokenized_data, None 
+	return myfeat, tokenized_data, None
 
 def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
     """
