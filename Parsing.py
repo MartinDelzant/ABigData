@@ -39,14 +39,14 @@ for i, item in enumerate(data):
 ## Get all dependencies in a list
 d=[]
 
-for i,j in enumerate(data[257:25000]):
-	print("YO", i+257)
+for i,j in enumerate(data[267:25000]):
+	print("YO", i+267)
 	e=[]
 	ex1=tokenizer.tokenize(j)
 	ex2=[]
 	ex3=[]
 	for i, item in enumerate(ex1):
-		if (len(item)>2) and (len(item)<=500):				## to avoid tokenizing problems like sentences '..' or '.'
+		if (len(item)>3) and (len(item)<=500):				## to avoid tokenizing problems like sentences '..' or '.'
 			ex2.append(item)
 		if len(item)> 500:
 			ex3 = item.replace(',','.')
