@@ -9,10 +9,15 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
 # from sklearn.decomposition import NMF, LatentDirichletAllocation
 from fonctions import *
+from bs4 import BeautifulSoup
+from nltk.tokenize import TweetTokenizer
 
 print("Loading training set")
 data, y = loadTrainSet()
 cv = StratifiedKFold(y, n_folds=5, shuffle=True, random_state=41)
+
+print("BeautifulSoup...")
+data = use_beaufifulsoup(data)
 
 print("preprocess ...")
 myFeat,data, pos_tag = preprocess(data)
@@ -32,6 +37,24 @@ tfidfChar = TfidfVectorizer(ngram_range=(3, 5),
 	min_df=2, max_df=0.95, analyzer='char')
 X_char = tfidfChar.fit_transform(data)
 inv_vocChar = {v :k for k, v in tfidfChar.vocabulary_.items()}
+
+
+
+## TO FINISH TESTING
+# tf-idf with TweetTokenizer
+tweet_to = TweetTokenizer()
+tfidfWord_tweet = TfidfVectorizer(tokenizer = tweet_to, stop_words='english',
+							ngram_range=(1,3),min_df=2,max_df=0.95)
+X_tweet = tfidfWord.fit_transform(data)
+inv_voc_tweet = {v: k for k, v in tfidfWord_tweet.vocabulary_.items()}
+
+# HashingVectorizer
+vectorizer = HashingVectorizer(stop_words='english',
+							non_negative=True)
+X_hash = vectorizer.fit_transform(data)
+inv_voc_Hash = {v: k for k, v in tfidfWord_tweet.vocabulary_.items()}
+
+
 
 # Not tested yet ...
 countPOS = CountVectorizer(tokenizer=lambda x: x.split("##"),
