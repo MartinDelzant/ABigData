@@ -39,8 +39,8 @@ for i, item in enumerate(data):
 ## Get all dependencies in a list
 d=[]
 
-for i,j in enumerate(data[267:25000]):
-	print("YO", i+267)
+for i,j in enumerate(data[317:25000]):
+	print("YO", i+317)
 	e=[]
 	ex1=tokenizer.tokenize(j)
 	ex2=[]
@@ -51,6 +51,8 @@ for i,j in enumerate(data[267:25000]):
 		if len(item)> 500:
 			ex3 = item.replace(',','.')
 			ex2.extend(tokenizer.tokenize(ex3))
+	for i, item in enumerate(ex2):
+		ex2[i] = item.replace('.','')
 	rel1=[]
 	for i in ex2:
 		rel1=[list(parse.triples()) for parse in dep_parser.raw_parse(i)]
@@ -58,6 +60,7 @@ for i,j in enumerate(data[267:25000]):
 
 
 	d.append(e)
+## Last error : problem of memory for parsing.... ABANDON
 
 ## Apply CountVectorizer to the list of dependencies
 from sklearn.feature_extraction.text import CountVectorizer
