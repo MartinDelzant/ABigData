@@ -12,6 +12,7 @@ from fonctions import *
 from bs4 import BeautifulSoup
 from nltk.tokenize import TweetTokenizer
 
+
 print("Loading training set")
 data, y = loadTrainSet()
 cv = StratifiedKFold(y, n_folds=5, shuffle=True, random_state=41)
@@ -47,12 +48,6 @@ tfidfWord_tweet = TfidfVectorizer(tokenizer = tweet_to, stop_words='english',
 							ngram_range=(1,3),min_df=2,max_df=0.95)
 X_tweet = tfidfWord.fit_transform(data)
 inv_voc_tweet = {v: k for k, v in tfidfWord_tweet.vocabulary_.items()}
-
-# HashingVectorizer
-vectorizer = HashingVectorizer(stop_words='english',
-							non_negative=True)
-X_hash = vectorizer.fit_transform(data)
-inv_voc_Hash = {v: k for k, v in tfidfWord_tweet.vocabulary_.items()}
 
 
 
