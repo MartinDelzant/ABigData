@@ -10,6 +10,7 @@ import string
 from sys import getfilesystemencoding as myencoding
 #import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
+from bs4 import BeautifulSoup
 
 
 def loadData(train=True, verbose=False):
@@ -89,7 +90,7 @@ def preprocess(data, lemmatizer=None, stemmer=None,load_postag = False,load_myfe
 
     def preprocess_string(sentence, lemmatizer=lemmatizer, stemmer=stemmer):
         if load_myfeat :
-		myfeat = myFeatures(sentence)
+            myfeat = myFeatures(sentence)
         tokenized_sentence = nltk.word_tokenize(re.sub(r"<.*?>", " ", sentence))
         # POS tagging :
         # postag = '##'.join(list(zip(*nltk.pos_tag(tokenized_sentence)))[1])
@@ -100,16 +101,16 @@ def preprocess(data, lemmatizer=None, stemmer=None,load_postag = False,load_myfe
             tokenized_sentence = [stemmer.stem(word)
                                   for word in tokenized_sentence]
         tokenized_sentence = " ".join(tokenized_sentence)
-	if load_myfeat :
-        	return myfeat, tokenized_sentence
-	else :
-		return None, tokenized_sentence
-	
+    if load_myfeat :
+        return myfeat, tokenized_sentence
+    else :
+        return None, tokenized_sentence
+    
     myfeat, tokenized_data = list(zip(*map(preprocess_string, data)))
     if load_postag:
-    	return myfeat, tokenized_data, loadPostag()
+        return myfeat, tokenized_data, loadPostag()
     else :
-	return myfeat, tokenized_data, None
+        return myfeat, tokenized_data, None
 
 def plot_roc_curve(y_true, probas, fig_args=dict(), **kwargs):
     """
