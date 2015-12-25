@@ -28,6 +28,9 @@ from time import time
 
 from sklearn import metrics
 
+from sklearn.grid_search import GridSearchCV
+
+
 # load data
 print("Loading training set")
 data, y = loadTrainSet()
@@ -49,14 +52,13 @@ tweet_to = TweetTokenizer(strip_handles=True,
 
 # TF-IDF
 # tweet_tokenizer
+print("TF-IDF...")
 tfidf_tweet = TfidfVectorizer(tokenizer = tweet_to,
 	stop_words = 'english',
 	ngram_range=(1,3),
-	min_df=2,
-	max_df=0.95,
 	sublinear_tf=True)
 X_tweet = tfidf_tweet.fit_transform(data) ## 553 081 features
-
+# TO DO : count number of uppercase / words with uppercase
 
 # word_tokenizer
 
@@ -68,6 +70,7 @@ X_train, X_test, y_train, y_test = cross_validation.train_test_split(X_tweet, y,
 
 # cross-validation
 ## MultinomialNB
+print("MultinomialNB...")
 model = MultinomialNB(alpha=0.5)
 ## return accuracy scores
 scores = [model.fit(X_tweet[train], y[train]).score(X_tweet[test], y[test])
@@ -77,6 +80,7 @@ print("Accuracy: %0.2f (+/- %0.2f)" % (scores1.mean(), scores1.std() * 2))
 
 
 # benchmarks
+print("benchmarks...")
 def benchmark(clf):
     print('_' * 80)
     print("Training: ")
@@ -100,16 +104,17 @@ def benchmark(clf):
 
 
 
-results=[]
+results1=[]
 for clf, name in (
-        (RidgeClassifier(tol=1e-2, solver="lsqr"), "Ridge Classifier"),
-        (Perceptron(n_iter=50), "Perceptron"),
-        (PassiveAggressiveClassifier(n_iter=50), "Passive-Aggressive"),
-        (KNeighborsClassifier(n_neighbors=10), "kNN"),
-        (RandomForestClassifier(n_estimators=100), "Random forest")):
+        (RidgeClassifier(alpha = 0.1, tol=1e-1, solver="sag"), "Ridge Classifier"),
+        #(Perceptron(n_iter=200, random_state = 42), "Perceptron"),
+        (PassiveAggressiveClassifier(C=0.1, n_iter=200, loss='hinge'), "Passive-Aggressive"),
+        #(KNeighborsClassifier(n_neighbors=10), "kNN"),
+        #(RandomForestClassifier(n_estimators=500, n_jobs = 3), "Random forest"),
+        ):
     print('=' * 80)
     print(name)
-    results.append(benchmark(clf))
+    results1.append(benchmark(clf))
 
 ## First classifiers
 # ridge classifier : 0.904
@@ -126,8 +131,11 @@ for penalty in ["l2", "l1"]:
                                             dual=False, tol=1e-3)))
 
     # Train SGD model
-    results.append(benchmark(SGDClassifier(alpha=.0001, n_iter=50,
-                                           penalty=penalty)))
+results.append(benchmark(SGDClassifier(loss = 'log', alpha=.00001, l1_ratio=0.01, epsilon= 0.01, n_iter=100,
+                                           penalty='l1')))
+results.append(benchmark(LogisticRegression(C= 0.1, solver = 'lbfgs', penalty = 'l2', n_jobs = 3)))
+
+from sklearn.linear_model import LogisticRegression
 
 
 ## L2 penalty
@@ -160,5 +168,13 @@ results.append(benchmark(MultinomialNB(alpha=.01)))
 results.append(benchmark(BernoulliNB(alpha=0.5)))
 
 # Naive Bayes : 0.88....
+
+# GridSearch
+## RidgeClassifier
+
+#ridge = RidgeClassifier(tol=1e-3, solver="lsqr") 
+#alphas = np.logspace(-6, -1, 100)
+#clf = GridSearchCV(estimator=ridge, param_grid=dict(alpha=alphas), n_jobs = 3)
+#clf.fit(X_train, y_train)
 
 # feature_selection
