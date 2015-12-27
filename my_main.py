@@ -81,21 +81,21 @@ print("Accuracy: %0.2f (+/- %0.2f)" % (scores1.mean(), scores1.std() * 2))
 
 # benchmarks
 print("benchmarks...")
-def benchmark(clf):
+def benchmark(clf, X_tr, y_tr, X_ts, y_ts):
     print('_' * 80)
     print("Training: ")
     print(clf)
     t0 = time()
-    clf.fit(X_train, y_train)
+    clf.fit(X_tr, y_tr)
     train_time = time() - t0
     print("train time: %0.3fs" % train_time)
 
     t0 = time()
-    pred = clf.predict(X_test)
+    pred = clf.predict(X_ts)
     test_time = time() - t0
     print("test time:  %0.3fs" % test_time)
 
-    score = metrics.accuracy_score(y_test, pred)
+    score = metrics.accuracy_score(y_ts, pred)
     print("accuracy:   %0.3f" % score)
 
     print()
@@ -106,9 +106,9 @@ def benchmark(clf):
 
 results1=[]
 for clf, name in (
-        (RidgeClassifier(alpha = 0.1, tol=1e-1, solver="sag"), "Ridge Classifier"),
+        #(RidgeClassifier(alpha = 0.1, tol=1e-1, solver="sag"), "Ridge Classifier"),
         #(Perceptron(n_iter=200, random_state = 42), "Perceptron"),
-        (PassiveAggressiveClassifier(C=0.1, n_iter=200, loss='hinge'), "Passive-Aggressive"),
+        (PassiveAggressiveClassifier(C=0.099, n_iter=200, loss='hinge',random_state = 42), "Passive-Aggressive"),
         #(KNeighborsClassifier(n_neighbors=10), "kNN"),
         #(RandomForestClassifier(n_estimators=500, n_jobs = 3), "Random forest"),
         ):
@@ -178,3 +178,42 @@ results.append(benchmark(BernoulliNB(alpha=0.5)))
 #clf.fit(X_train, y_train)
 
 # feature_selection
+# selection from model
+from sklearn.feature_selection import SelectFromModel
+
+clf = PassiveAggressiveClassifier(C=0.099, n_iter=200, loss='hinge',random_state = 42)
+
+sfm = SelectFromModel(clf, threshold = 0.001)
+
+sfm.fit(X_train, y_train)
+
+X_train_select = sfm.transform(X_train)
+X_test_select = sfm.transform(X_test)
+
+# test with new clf
+clf1 = PassiveAggressiveClassifier(C=0.5, n_iter=200, loss='hinge',random_state = 42)
+
+benchmark(clf1, X_train_select, y_train, X_test_select, y_test)
+
+# GridSearch for C
+# Set the parameters by cross-validation
+tuned_parameters = [{'C': np.logspace(-6, 0, 1000)}]
+
+score = 'accuracy'
+
+print("# Tuning hyper-parameters for %s" % score)
+print()
+
+clf = GridSearchCV(clf1, tuned_parameters, cv=cv)
+clf.fit(X_train, y_train)
+
+print("Best parameters set found on development set:")
+print()
+print(clf.best_params_)
+print()
+print("Grid scores on development set:")
+print()
+for params, mean_score, scores in clf.grid_scores_:
+    print("%0.3f (+/-%0.03f) for %r"
+          % (mean_score, scores.std() * 2, params))
+print()
