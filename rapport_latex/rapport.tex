@@ -36,7 +36,7 @@ If the model used yields a probability of belonging to a specific class, we coul
 Then we can read a small subset of the wrongly classified observations and try to verify hypotheses related to the unindentified patterns.
 
 
-\section{First model}
+\section{First model : TF-IDF on raw data}
 
 Logistic Regression with stochastic gradient descent seems to yield the best results (If you google "state-of-the-art" sentiment classification, you can find an answer by olivier grisel which states that logistic regression is used by twitter engineers to classify tweets with the same binary labels).\\
 
@@ -48,11 +48,49 @@ What features should we use ?
 	\item Extra handcrafted features
 \end{itemize} 
 
+
+First, we tried to implement a TF-IDF on raw data, without preprocessing.
+We tested several machine learning models :
+\begin{itemize}
+	\item MultinomialNB : our reference model
+	\item BernoulliNB
+	\item Linear SVC
+	\item RandomForest : takes a long time of computation and not great results....
+	\item RidgeClassifier
+	\item k-NN
+	\item Perceptron
+	\item Logisitic Regression
+	\item SGD Classifier
+	\item Passive Aggressive Classifier : best results 
+\end{itemize} 
+
+Then, we selected the best features by implemententing a $\chi^2$-test on our first TF-IDF matrix.
+
+We took only 3 different feature models on with SGD Classifer and Passive Aggressive Classifier :
+\begin{itemize}
+	\item 100K features
+	\item 800K features
+	\item 2M features
+\end{itemize} 
+
+Eventually, the best score we got was with Passive Aggressive Classifier and 800K features.
+
 \section{Analysis of the wrongly classified observations}
 
 ROC curve using probability of being wrongly classified ???
 
+\section{Second Model : add preprocessing of the data}
 
+\subsection{Tokenizer}
 
+\subsection{Handcrafted features}
+
+\section{Analysis of the wrongly classified observations}
+
+ROC curve using probability of being wrongly classified ???
+
+\section{Third Model : Add Graph of Words}
 
 \end{document}
+
+
