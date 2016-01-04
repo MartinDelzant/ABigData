@@ -2,27 +2,24 @@
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import SelectKBest, chi2, f_classif
 from sklearn.cross_validation import StratifiedKFold, cross_val_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
+from sklearn.grid_search import GridSearchCV
 # from sklearn.decomposition import NMF, LatentDirichletAllocation
 from fonctions import *
 from bs4 import BeautifulSoup
 from nltk.tokenize import TweetTokenizer
-
+from scipy import sparse
 
 print("Loading training set")
 data, y = loadTrainSet()
 cv = StratifiedKFold(y, n_folds=5, shuffle=True, random_state=41)
 
-print("BeautifulSoup...")
-data = use_beaufifulsoup(data)
-
 print("preprocess ...")
 myFeat,data, pos_tag = preprocess(data)
-#myFeat, data, pos_tag = preprocess(data)
 
 print("Tfidf ...")
 # Stop words : Yes /No ?
@@ -33,24 +30,13 @@ tfidfWord = TfidfVectorizer(ngram_range=(1, 2),
     min_df=2, max_df=0.95)
 X = tfidfWord.fit_transform(data)
 inv_voc = {v: k for k, v in tfidfWord.vocabulary_.items()}
-
+print('tfidf char')
 tfidfChar = TfidfVectorizer(ngram_range=(3, 5),
 	min_df=2, max_df=0.95, analyzer='char')
 X_char = tfidfChar.fit_transform(data)
 inv_vocChar = {v :k for k, v in tfidfChar.vocabulary_.items()}
 
-
-
-## TO FINISH TESTING
-# tf-idf with TweetTokenizer
-tweet_to = TweetTokenizer()
-tfidfWord_tweet = TfidfVectorizer(tokenizer = tweet_to, stop_words='english',
-							ngram_range=(1,3),min_df=2,max_df=0.95)
-X_tweet = tfidfWord.fit_transform(data)
-inv_voc_tweet = {v: k for k, v in tfidfWord_tweet.vocabulary_.items()}
-
-
-
+print('CountPOS tfidf')
 # Not tested yet ...
 countPOS = CountVectorizer(tokenizer=lambda x: x.split("##"),
 	ngram_range=(1,4), lowercase=False, min_df=2)
@@ -68,14 +54,20 @@ kBestChar.fit(X_char, y)
 print('"\t"'.join([inv_vocChar[index] for index in np.argsort(kBestChar.scores_)[::-1][:25]]))
 
 # TODO : hstack the matrices
-
+params = {"selectkbest__k":list(range(10000, 1000000, 5000)), "multinomialnb__alpha":np.logspace(-3,3,10)}
 # Printing scores and roc curve :
-model = MultinomialNB(alpha=0.5)
-scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
-scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
-print("Accuracy :\n", round(np.mean(scores_accuracy), 4), "+/-", round(2*np.std(scores_accuracy),4))
-print("ROC AUC : \n", round(np.mean(scores_roc_auc), 4), "+/-", round(2*np.std(scores_roc_auc),4))
+models = [ # MultinomialNB(alpha=0.5), 
+GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB()), params, cv=cv, verbose=1),
+GridSearchCV(make_pipeline(SelectKBest(f_classif), MultinomialNB()), params, cv=cv, verbose=1)
+]
+for model in models:
+    model.fit(sparse.hstack((X, X_char)),y)
+    scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
+    scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
 
+    print("Accuracy :\n", round(np.mean(scores_accuracy), 4), "+/-", round(2*np.std(scores_accuracy),4))
+    print("ROC AUC : \n", round(np.mean(scores_roc_auc), 4), "+/-", round(2*np.std(scores_roc_auc),4))
+"""
 #creating the cross_val predict and predict_proba :
 y_pred_proba = np.zeros((y.shape[0], 2))
 for train_idx, test_idx in cv:
@@ -86,5 +78,5 @@ y_pred = np.argmax(y_pred_proba, axis=1)
 # Reports and roc curve
 print(classification_report(y,y_pred))
 plot_roc_curve(y, y_pred_proba[:,1], fig_args=dict(figsize=(8,8)))
-
+"""
 print("Done !")

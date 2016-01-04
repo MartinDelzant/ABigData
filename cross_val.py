@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.linear_model import LogisticRegression, SGDClassifier, PassiveAggressiveClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier, GradientBoostingClassifier, BaggingClassifier
 from fonctions import loadTrainSet
 from sklearn.cross_validation import StratifiedKFold
@@ -12,12 +12,12 @@ from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.multiclass import OneVsOneClassifier
-
-_, y = loadTrainSet()
-cv = StratifiedKFold(y, n_folds=5, shuffle=True, random_state=41)
+import copy
 
 
-def cross_val(clf_name, X, y, cv=cv, proba=False, score=accuracy_score, *params, **kwargs):
+
+def cross_val(clf_name, X, y, n_folds=5, proba=False, score=accuracy_score, *params, **kwargs):
+    cv = StratifiedKFold(y, n_folds=n_folds, shuffle=True, random_state=41)
     if clf_name == "extra":
         c = ExtraTreesClassifier(12, max_depth=23, max_features=10, n_jobs=-1, *params, **kwargs)
     elif clf_name == "grad":
@@ -27,7 +27,7 @@ def cross_val(clf_name, X, y, cv=cv, proba=False, score=accuracy_score, *params,
     elif clf_name == "cmulti":
         c = CalibratedClassifierCV(base_estimator=MultinomialNB(alpha = alpha_multi, *params, **kwargs), method='isotonic', cv=10) 
     elif clf_name == "multi":
-        c = MultinomialNB(alpha=0.5, *params, **kwargs)
+        c = MultinomialNB(*params, **kwargs)
     elif clf_name == "bag":
         c = BaggingClassifier(base_estimator=MultinomialNB(alpha = 0.5, *params, **kwargs),n_estimators = 100,n_jobs = -1)
     elif clf_name == "bern":
@@ -54,13 +54,14 @@ def cross_val(clf_name, X, y, cv=cv, proba=False, score=accuracy_score, *params,
     y_pred = np.zeros(y.shape)
     score_list = []
     for i, (train, test) in enumerate(cv):
-        c.fit(X[train], y[train])
+        c.fit(X[train,:], y[train])
         if proba:
-            y_pred[test] = c.predict_proba(X[test])
+            y_pred[test] = c.predict_proba(X[test,:])
         else:
-            y_pred[test] = c.predict(X[test])
+            y_pred[test] = c.predict(X[test,:])
         score_list.append(score(y[test], y_pred[test]))
         print(score_list[i])
+    print("Final score",score(y,y_pred))
     return y_pred
 
 
@@ -68,7 +69,7 @@ def cross_val_warm(clf_name, X, y, n_estimators_grid=range(10, 500, 50), *params
     if "sklearn" in str(type(clf_name)):
         c = clf_name
     if clf_name == "random":
-        c = RandomForestClassifier(warm_start=True, oob_score=True, *params, **kwargs)
+        c = RandomForestClassifier(warm_start=True, oob_score=True, n_estimators=600, n_jobs=-1, *params, **kwargs)
     elif clf_name == "bag":
         c = BaggingClassifier(base_estimator=MultinomialNB(alpha=0.5, *params, **kwargs), n_estimators=100, n_jobs=-1, *params, **kwargs)
     if clf_name == "extra":
@@ -78,3 +79,22 @@ def cross_val_warm(clf_name, X, y, n_estimators_grid=range(10, 500, 50), *params
         c.fit(X, y)
         print(str(n_est)+"\t"+str(c.oob_score_))
     return c
+
+def cross_val_partial(clf_name, X, y, n_folds=5, n_iter = 5, max_iter=1000, *params, **kwargs):
+    cv = StratifiedKFold(y, n_folds=n_folds, shuffle=True, random_state=41)
+    if clf_name == "sgd":
+        c = SGDClassifier(warm_start=True)
+    if clf_name == "passive":
+        c = PassiveAggressiveClassifier(fit_intercept=True, warm_start=True, random_state=41)
+    all_models = [copy.deepcopy(c) for _ in cv]
+    current_iter = 0
+    all_scores = []
+    for current_iter in range(0, max_iter, n_iter):
+        scores = []
+        for model, (train,test) in zip(all_models, cv):
+            model.fit(X[train,:], y[train])
+            scores.append(model.score(X[test,:], y[test]))
+        all_scores.append(np.mean(scores))
+        print(current_iter, all_scores[-1],'\t',' '.join([str(round(score,4)) for score in scores]))
+    print("N iter tot :" , all_models[0].t_)
+    return all_scores

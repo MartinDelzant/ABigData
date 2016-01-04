@@ -54,8 +54,17 @@ def loadTrainSet(shuffle=False, dataFrame=False, verbose=False):
 
 def myFeatures(string):
     all_notes = re.findall(r'[0-9]0? *?/ *?10', string)
-    if len(all_notes)>1:
+    if all_notes:
         print(all_notes)
+        all_notes = [int(x.split('/')[0].strip()) for x in all_notes]
+        mean = np.mean(all_notes)
+        maxim = np.max(all_notes)
+        minim = np.min(all_notes)
+        print(all_notes, mean, maxim, minim)
+    else:
+        mean = -1
+        maxim = -1
+        minim = -1
     return [
         len(string),
         string.count('.'),
@@ -66,7 +75,9 @@ def myFeatures(string):
         len(re.findall(r'[0-9]', string)),
         string.count('<'),
         len(re.findall(r'star(s)?', string)),
-        np.mean([int(x.split('/')[0].strip()) for x in all_notes]) if all_notes else -1,
+        mean,
+        maxim,
+        minim,
         len(re.findall(r'[A-Z]', string))
         ]
 
