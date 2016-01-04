@@ -26,12 +26,12 @@ print("Tfidf ...")
 # regex : Yes / No ?
 # sublinear tf : Y/N ?
 # ...
-tfidfWord = TfidfVectorizer(ngram_range=(1, 2),
-    min_df=2, max_df=0.95)
+tfidfWord = TfidfVectorizer(ngram_range=(1, 3),
+    min_df=2, max_df=0.95
 X = tfidfWord.fit_transform(data)
 inv_voc = {v: k for k, v in tfidfWord.vocabulary_.items()}
 print('tfidf char')
-tfidfChar = TfidfVectorizer(ngram_range=(3, 5),
+tfidfChar = TfidfVectorizer(ngram_range=(3, 6),
 	min_df=2, max_df=0.95, analyzer='char')
 X_char = tfidfChar.fit_transform(data)
 inv_vocChar = {v :k for k, v in tfidfChar.vocabulary_.items()}
@@ -61,7 +61,6 @@ GridSearchCV(make_pipeline(SelectKBest(chi2), MultinomialNB()), params, cv=cv, v
 GridSearchCV(make_pipeline(SelectKBest(f_classif), MultinomialNB()), params, cv=cv, verbose=1)
 ]
 for model in models:
-    model.fit(sparse.hstack((X, X_char)),y)
     scores_accuracy = cross_val_score(model, X, y, cv=cv, n_jobs=-1)
     scores_roc_auc = cross_val_score(model, X, y, cv=cv, n_jobs=-1, scoring="roc_auc")
 
