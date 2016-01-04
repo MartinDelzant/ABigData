@@ -101,11 +101,11 @@ def preprocess(data, lemmatizer=None, stemmer=None,load_postag = False,load_myfe
             tokenized_sentence = [stemmer.stem(word)
                                   for word in tokenized_sentence]
         tokenized_sentence = " ".join(tokenized_sentence)
-    if load_myfeat :
-        return myfeat, tokenized_sentence
-    else :
-        return None, tokenized_sentence
-    
+	
+        if load_myfeat :
+            return myfeat, tokenized_sentence
+        else :
+            return None, tokenized_sentence
     myfeat, tokenized_data = list(zip(*map(preprocess_string, data)))
     if load_postag:
         return myfeat, tokenized_data, loadPostag()
